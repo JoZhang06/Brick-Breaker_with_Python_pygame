@@ -2,15 +2,17 @@ import pygame
 import random
 import sys 
 import os
+import subprocess
 
+#Cierra la primera ventana
+subprocess.Popen(["python", "game.py"])
 # Inicializar Pygame
 pygame.init()
-
 # Configuración de la pantalla
 screen_width = 1000
 screen_height = 600
 screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Brick Breaker")
+pygame.display.set_caption("Brick Breaker lv 2")
 
 # Función para mostrar la pantalla de inicio
 def pantalla_inicio():
@@ -25,7 +27,7 @@ def pantalla_inicio():
 
         screen.fill((0, 0, 0))  # Fondo negro
         font = pygame.font.Font(None, 36)
-        mensaje = font.render("Presiona el botón o espacio para comenzar", True, (255, 255, 255))
+        mensaje = font.render("Presiona el botón o espacio para comenzar el nivel 2", True, (255, 255, 255))
         screen.blit(mensaje, (250, 200))
 
         # Dibuja el botón de inicio
@@ -83,8 +85,8 @@ def generate_random_color():
     return random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
 
 # Rellenar la lista de ladrillos con colores aleatorios
-for row in range(1):
-    for col in range(1):
+for row in range(8):
+    for col in range(8):
         brick_x = col * (brick_width + 5)
         brick_y = row * (brick_height + 5)
         brick_color = generate_random_color()
@@ -164,14 +166,14 @@ while not game_over:
             bricks.remove(brick)
 
     # Rotar la imagen de fondo
-    #angle += 0.2  # Incrementa el ángulo de rotación
-    #rotated_background = pygame.transform.rotate(background, angle)
+    angle += 0.2  # Incrementa el ángulo de rotación
+    rotated_background = pygame.transform.rotate(background, angle)
 
     # Limpiar la pantalla
     screen.fill((0, 0, 0))  # Limpia la pantalla con un fondo negro
 
     # Dibujar la imagen de fondo rotando
-    #screen.blit(rotated_background, (2, 2))
+    screen.blit(rotated_background, (2, 2))
 
     # Dibujar la raqueta
     pygame.draw.rect(screen, raqueta, (paddle_x, paddle_y, paddle_width, paddle_height))
@@ -189,15 +191,11 @@ while not game_over:
 
     # Condición de victoria
     if len(bricks) == 0: 
-        game_over = True
-        os.system("python level2.py") 
+        os.system("python level2.py")  
     # Condición de derrota
     if ball_y > screen_height: 
         game_over = True
-        pygame.quit() 
-        sys.exit()
  
 # Cerrar Pygame
-
 pygame.quit()
 sys.exit()

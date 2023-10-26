@@ -1,7 +1,6 @@
 import pygame
 import random
-import sys 
-import os
+import sys
 
 # Inicializar Pygame
 pygame.init()
@@ -20,21 +19,32 @@ def pantalla_inicio():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.MOUSEBUTTONDOWN or (event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE):
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                if 400 <= pos[0] <= 600 and 300 <= pos[1] <= 350:
                     inicio = False
+                if 400 <= pos[0] <= 600 and 400 <= pos[1] <= 450:
+                    # Botón de "Salir" presionado
+                    pygame.quit()
+                    sys.exit()
 
         screen.fill((0, 0, 0))  # Fondo negro
         font = pygame.font.Font(None, 36)
-        mensaje = font.render("Presiona el botón o espacio para comenzar", True, (255, 255, 255))
-        screen.blit(mensaje, (250, 200))
+        mensaje = font.render("Presiona el botón para comenzar", True, (255, 255, 255))
+        screen.blit(mensaje, (300, 200))
 
-        # Dibuja el botón de inicio
-        pygame.draw.rect(screen, (185, 225, 185), (400, 300, 200, 50))
-        font = pygame.font.Font(None, 34)
-        mensaje = font.render("Jugar", True, (0, 0, 0))
-        screen.blit(mensaje, (470, 312))
+        # Dibuja el botón de "Comenzar"
+        pygame.draw.rect(screen, (185, 225, 185), (400, 300, 200, 44))
+        font = pygame.font.Font(None, 32)
+        mensaje = font.render("Comenzar", True, (0, 0, 0))
+        screen.blit(mensaje, (450, 312))
 
-        pygame.display.flip() 
+        # Dibuja el botón de "Salir"
+        pygame.draw.rect(screen, (185, 0, 0), (400, 400, 200, 44))
+        mensaje = font.render("Salir", True, (255, 255, 255))
+        screen.blit(mensaje, (470, 412))
+
+        pygame.display.flip()
 
 pantalla_inicio()
 
@@ -42,9 +52,9 @@ pantalla_inicio()
 BackgrounMusic = pygame.mixer.Sound('sounds/spacesong.mp3')
 BackgrounMusic.play(-1)
 # Cargar el sonido para cuando la pelota golpee la raqueta
-sound_pelota_raqueta = pygame.mixer.Sound('sounds/golpe.mp3') 
+sound_pelota_raqueta = pygame.mixer.Sound('sounds/golpe.mp3')
 
-# Colores de raqueta, pelota 
+# Colores de raqueta, pelota
 raqueta = (196, 188, 238)
 pelota = (0, 208, 238)
 
@@ -53,7 +63,6 @@ background = pygame.image.load('img/Space.png')
 background = pygame.transform.scale(background, (screen_width, screen_height))
 angle = 0  # Ángulo de rotación inicial
 
-
 # Configuración de la raqueta
 paddle_width = 140
 paddle_height = 15
@@ -61,17 +70,17 @@ paddle_x = (screen_width - paddle_width) // 2
 paddle_y = screen_height - paddle_height
 
 # Restringir los límites de movimiento de la raqueta
-paddle_speed = 8
+paddle_speed = 10
 
 # Configuración de la pelota
 ball_radius = 10
 ball_x = random.randint(ball_radius, screen_width - ball_radius)
 ball_y = paddle_y - 2 * ball_radius
-ball_speed_x = 5
-ball_speed_y = -5
+ball_speed_x = 6
+ball_speed_y = -6
 
 # Restringir los límites de movimiento de la pelota
-ball_speed_limit = 6
+ball_speed_limit = 9
 
 # Configuración de los ladrillos
 brick_width = 80
@@ -82,17 +91,23 @@ bricks = []
 def generate_random_color():
     return random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
 
-# Rellenar la lista de ladrillos con colores aleatorios
-for row in range(1):
-    for col in range(1):
-        brick_x = col * (brick_width + 5)
-        brick_y = row * (brick_height + 5)
-        brick_color = generate_random_color()
-        bricks.append([brick_x, brick_y, brick_color])
+# Función para generar ladrillos aleatorios
+def generar_ladrillos():
+    shuffle_bricks()
+    bricks.clear()  # Borra todos los ladrillos existentes
+    for row in range(5):
+        for col in range(12):
+            brick_x = col * (brick_width + 5)
+            brick_y = row * (brick_height + 5)
+            brick_color = generate_random_color()
+            bricks.append([brick_x, brick_y, brick_color])
 
 # Game loop
 clock = pygame.time.Clock()
 game_over = False
+
+def shuffle_bricks():
+    random.shuffle(bricks)
 
 while not game_over:
     for event in pygame.event.get():
@@ -124,54 +139,25 @@ while not game_over:
     # Comprobar colisión con la raqueta
     if (
         ball_y + ball_radius >= paddle_y
-        and paddle_x <= ball_x <= paddle_x + paddle_width
+        and paddle_x - ball_radius <= ball_x <= paddle_x + paddle_width + ball_radius
     ):
-        # Determinar la posición relativa de la colisión en la raqueta
-        relative_collision_position = (ball_x - paddle_x) / paddle_width
-        
-        # Ajustar la dirección de la pelota según la posición de la colisión
-        if relative_collision_position < 0.2:
-            # Cambiar la dirección hacia la izquierda y hacia arriba
-            ball_speed_x = -ball_speed_x
-            ball_speed_y = -ball_speed_y
-        elif relative_collision_position < 0.4:
-            # Cambiar la dirección hacia la izquierda y un poco hacia arriba
-            ball_speed_x = -ball_speed_x
-            ball_speed_y = -0.8 * ball_speed_y
-        elif relative_collision_position < 0.6:
-            # Cambiar solo la dirección vertical hacia arriba
-            ball_speed_y = -ball_speed_y
-        elif relative_collision_position < 0.8:
-            # Cambiar la dirección hacia la derecha y un poco hacia arriba
-            ball_speed_x = ball_speed_x
-            ball_speed_y = -0.8 * ball_speed_y
-        else:
-            # Cambiar la dirección hacia la derecha y hacia arriba
-            ball_speed_x = ball_speed_x
-            ball_speed_y = -ball_speed_y
-
-
+        # Cambiar solo la dirección vertical hacia arriba
+        ball_speed_y = -ball_speed_y
 
     # Reproducir el sonido al golpear la raqueta
-    sound_pelota_raqueta.play()  
+    sound_pelota_raqueta.play()
 
     # Verificar colisiones con los ladrillos
     for brick in bricks:
-        if (brick[0] <= ball_x <= brick[0] + brick_width) and (
-            brick[1] <= ball_y <= brick[1] + brick_height
+        if (
+            brick[0] <= ball_x <= brick[0] + brick_width
+            and brick[1] <= ball_y <= brick[1] + brick_height
         ):
             ball_speed_y = -ball_speed_y
             bricks.remove(brick)
 
-    # Rotar la imagen de fondo
-    #angle += 0.2  # Incrementa el ángulo de rotación
-    #rotated_background = pygame.transform.rotate(background, angle)
-
     # Limpiar la pantalla
     screen.fill((0, 0, 0))  # Limpia la pantalla con un fondo negro
-
-    # Dibujar la imagen de fondo rotando
-    #screen.blit(rotated_background, (2, 2))
 
     # Dibujar la raqueta
     pygame.draw.rect(screen, raqueta, (paddle_x, paddle_y, paddle_width, paddle_height))
@@ -189,15 +175,12 @@ while not game_over:
 
     # Condición de victoria
     if len(bricks) == 0: 
-        game_over = True
-        os.system("python level2.py") 
-    # Condición de derrota
-    if ball_y > screen_height: 
-        game_over = True
-        pygame.quit() 
-        sys.exit()
- 
-# Cerrar Pygame
+        generar_ladrillos()
 
+    # Condición de derrota 
+    if ball_y > screen_height:
+        pantalla_inicio()
+
+# Cerrar Pygame
 pygame.quit()
 sys.exit()
